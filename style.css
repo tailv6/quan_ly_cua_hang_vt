@@ -1,0 +1,48 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #0f172a;
+}
+
+.bg-viettel {
+  background-color: #ee0033;
+}
+
+.text-viettel {
+  color: #ee0033;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Ẩn mặc định trước khi render */
+#main-app {
+  display: none;
+}
+
+.input-focus:focus {
+  border-color: #ee0033;
+  box-shadow: 0 0 0 3px rgba(238, 0, 51, 0.1);
+}
+
+.row-deleted td,
+.row-deleted div,
+.row-deleted span {
+  text-decoration: line-through !important;
+  color: #94a3b8 !important;
+  background: transparent !important;
+}
+
+.row-deleted {
+  opacity: 0.6;
+  background-color: #f8fafc !important;
+  pointer-events: none;
+}
