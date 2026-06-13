@@ -176,6 +176,7 @@ async function doLogin() {
     if (res.success) {
       localStorage.setItem("currentUser", res.staffId);
       localStorage.setItem("loginTime", Date.now()); // CHỐT GIỜ BẮT ĐẦU CA LÀM VIỆC
+      document.getElementById("password").value = "";
       document.documentElement.classList.add("is-logged-in");
       Swal.fire({
         toast: true,
