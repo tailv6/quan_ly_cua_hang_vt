@@ -2,7 +2,7 @@
 
 body {
   font-family: "Inter", sans-serif;
-  background-color: #0f172a;
+  background-color: #f8fafc;
 }
 
 .bg-viettel {
@@ -47,7 +47,6 @@ body {
   pointer-events: none;
 }
 
-
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -62,4 +61,13 @@ body {
 
 .animate-fade-in-up {
   animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tùy chỉnh chữ gợi ý (placeholder) cho toàn bộ hệ thống */
+input::placeholder,
+textarea::placeholder {
+  font-weight: 400 !important; /* Chuyển về nét thường/mảnh (bỏ in đậm) */
+  font-size: 13px !important; /* Thu nhỏ kích thước chữ */
+  color: #94a3b8 !important; /* Giữ màu xám nhạt tinh tế */
+  font-style: italic !important;
 }

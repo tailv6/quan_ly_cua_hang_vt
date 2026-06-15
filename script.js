@@ -295,8 +295,10 @@ function initForm() {
   EDIT_ORDER_ID = "";
   const submitBtn = document.getElementById("btn-submit");
   if (submitBtn) {
-    submitBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> HOÀN TẤT ĐƠN';
-    submitBtn.className = "flex-1 bg-viettel hover:bg-red-700 text-white font-bold py-2.5 rounded-md transition duration-200 shadow flex justify-center items-center gap-2 text-sm";
+    submitBtn.innerHTML =
+      '<i class="fa-solid fa-check-double"></i> HOÀN TẤT ĐƠN';
+    submitBtn.className =
+      "flex-1 bg-viettel hover:bg-red-700 text-white font-bold py-2.5 rounded-md transition duration-200 shadow flex justify-center items-center gap-2 text-sm";
   }
   const cancelBtn = document.getElementById("btn-cancel-edit");
   if (cancelBtn) cancelBtn.classList.add("hidden");
@@ -658,16 +660,20 @@ async function sendDataToSheets() {
 
   // --- PHÂN NHÁNH LOGIC: NẾU ĐANG Ở CHẾ ĐỘ SỬA ĐƠN ---
   if (IS_EDIT_MODE) {
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> ĐANG CẬP NHẬT...';
+    submitBtn.innerHTML =
+      '<i class="fa-solid fa-spinner fa-spin mr-2"></i> ĐANG CẬP NHẬT...';
 
     // Ghi đè mã đơn hàng thành mã của đơn cũ đang sửa
-    dataToUpload.forEach(item => {
+    dataToUpload.forEach((item) => {
       item.orderId = EDIT_ORDER_ID;
     });
 
     try {
       // Gửi toàn bộ mảng dữ liệu đã sửa lên Sheets
-      await callGoogleAPI("updateOrderInSheet", { orderId: EDIT_ORDER_ID, dataArray: dataToUpload });
+      await callGoogleAPI("updateOrderInSheet", {
+        orderId: EDIT_ORDER_ID,
+        dataArray: dataToUpload,
+      });
 
       // Tải lại bảng lịch sử để hiển thị dữ liệu mới nhất
       await loadHistoryFromServer(CURRENT_STAFF);
@@ -836,24 +842,26 @@ function addOrderToTable(orderArray, orderId, isFromServer = false) {
          </div>`;
 
     html += `<tr class="${trClasses}">
-        ${index === 0
-        ? `<td class="p-4 text-xs align-top bg-white border-b border-b-slate-200" rowspan="${rowSpan}">${timeDisplay}</td>
+        ${
+          index === 0
+            ? `<td class="p-4 text-xs align-top bg-white border-b border-b-slate-200" rowspan="${rowSpan}">${timeDisplay}</td>
         <td class="p-4 align-top bg-white border-b border-b-slate-200" rowspan="${rowSpan}">
           <div class="font-bold text-slate-900 text-[13px]">${data.phone}</div>
           <div class="text-[10px] ${networkColorClass} font-bold tracking-widest mt-0.5">${data.network}</div>
         </td>`
-        : ""
-      }
+            : ""
+        }
         <td class="p-4 bg-white border-b border-b-slate-100"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${serviceStyle}">${data.service}</span></td>
         <td class="p-4 text-right font-bold text-slate-800 bg-white border-b border-b-slate-100">${data.gia_thu ? Number(data.gia_thu).toLocaleString("vi-VN") : "-"}</td>
         <td class="p-4 text-right font-bold text-emerald-600 bg-white border-b border-b-slate-100">${data.profit ? Number(data.profit).toLocaleString("vi-VN") : "-"}</td>
-        ${index === 0
-        ? `<td class="py-2 px-4 text-center align-middle bg-white border-b border-b-slate-200" rowspan="${rowSpan}">
+        ${
+          index === 0
+            ? `<td class="py-2 px-4 text-center align-middle bg-white border-b border-b-slate-200" rowspan="${rowSpan}">
           ${data.method ? `<span class="px-2 py-1 rounded text-[10px] font-bold ${methodStyle}">${data.method}</span>` : "-"}
         </td>
         <td class="py-2 px-4 text-center align-middle bg-white border-b border-b-slate-200" rowspan="${rowSpan}">${actionBtnHtml}</td>`
-        : ""
-      }
+            : ""
+        }
     </tr>`;
   });
   tbody.insertAdjacentHTML("afterbegin", html);
@@ -959,7 +967,7 @@ function initAutoLogout() {
 function handleEditOrder(orderId) {
   const orderArray = HISTORY_CACHE[orderId];
   if (!orderArray || orderArray.length === 0) return;
-  switchView('add-order');
+  switchView("add-order");
 
   // 1. Chuyển trạng thái hệ thống sang chế độ sửa
   IS_EDIT_MODE = true;
@@ -994,7 +1002,10 @@ function handleEditOrder(orderId) {
       const col = input.getAttribute("data-col");
       if (data[col] !== undefined && data[col] !== "") {
         let val = data[col];
-        if (input.hasAttribute("oninput") && input.getAttribute("oninput").includes("formatCurrencyInput")) {
+        if (
+          input.hasAttribute("oninput") &&
+          input.getAttribute("oninput").includes("formatCurrencyInput")
+        ) {
           input.value = Number(val).toLocaleString("vi-VN");
         } else {
           input.value = val;
@@ -1020,7 +1031,8 @@ function handleEditOrder(orderId) {
   // 4. Thay đổi giao diện nút Hoàn tất -> Cập nhật
   const submitBtn = document.getElementById("btn-submit");
   submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> CẬP NHẬT ĐƠN';
-  submitBtn.className = "flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-md transition duration-200 shadow flex justify-center items-center gap-2 text-sm";
+  submitBtn.className =
+    "flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-md transition duration-200 shadow flex justify-center items-center gap-2 text-sm";
 
   document.getElementById("btn-cancel-edit").classList.remove("hidden");
 
@@ -1033,23 +1045,25 @@ function cancelEditMode() {
   initForm();
 }
 
-
-
 // ==========================================
 // TỰ ĐỘNG FOCUS LẠI Ô NHẬP LIỆU KHI CHUYỂN TAB
 // ==========================================
 let lastFocusedElement = null;
 
 // Ghi nhớ ô input/select cuối cùng mà người dùng click vào
-document.addEventListener('focusin', function (e) {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+document.addEventListener("focusin", function (e) {
+  if (
+    e.target.tagName === "INPUT" ||
+    e.target.tagName === "SELECT" ||
+    e.target.tagName === "TEXTAREA"
+  ) {
     lastFocusedElement = e.target;
   }
 });
 
 // Khi người dùng quay trở lại cửa sổ/tab web này
-window.addEventListener('focus', function () {
-  // Kiểm tra xem phần tử đó có còn tồn tại trên giao diện không 
+window.addEventListener("focus", function () {
+  // Kiểm tra xem phần tử đó có còn tồn tại trên giao diện không
   // (tránh lỗi nếu đó là ô input thuộc khối dịch vụ vừa bị người dùng ấn nút xóa)
   if (lastFocusedElement && document.body.contains(lastFocusedElement)) {
     // Độ trễ 50ms giúp trình duyệt xử lý xong giao diện trước khi ép con trỏ chuột hiện lên
@@ -1058,10 +1072,6 @@ window.addEventListener('focus', function () {
     }, 50);
   }
 });
-
-
-
-
 
 // ==========================================
 // XỬ LÝ KHỐI THÔNG TIN THÊM (MÃ CTV, LINK...)
@@ -1078,7 +1088,7 @@ async function loadAdditionalInfo() {
       section.classList.remove("hidden"); // Hiện khối thông tin lên
       let html = "";
 
-      data.forEach(item => {
+      data.forEach((item) => {
         html += `
           <div class="p-2 border border-slate-100 rounded bg-slate-50 hover:bg-slate-100 transition-colors">
               <div class="flex justify-between items-start gap-2 mb-1.5">
@@ -1088,7 +1098,7 @@ async function loadAdditionalInfo() {
                   </button>
               </div>
               <div class="text-[11px] font-semibold text-slate-700 break-all bg-white px-2 py-1.5 border border-slate-200 rounded">${item.thong_tin}</div>
-              ${item.ghi_chu ? `<div class="text-[9px] text-slate-400 mt-1 italic"><i class="fa-solid fa-circle-info text-[8px]"></i> ${item.ghi_chu}</div>` : ''}
+              ${item.ghi_chu ? `<div class="text-[9px] text-slate-400 mt-1 italic"><i class="fa-solid fa-circle-info text-[8px]"></i> ${item.ghi_chu}</div>` : ""}
           </div>
         `;
       });
@@ -1098,34 +1108,50 @@ async function loadAdditionalInfo() {
     }
   } catch (error) {
     console.error("Lỗi tải thông tin thêm:", error);
-    document.getElementById("extra-info-container").innerHTML = `<div class="text-center text-red-500 text-[10px] py-4">Lỗi kết nối khi tải Thông tin thêm.</div>`;
+    document.getElementById("extra-info-container").innerHTML =
+      `<div class="text-center text-red-500 text-[10px] py-4">Lỗi kết nối khi tải Thông tin thêm.</div>`;
   }
 }
 
 // Hàm xử lý copy text và đổi hiệu ứng nút
 function copyToClipboard(text, btnElement) {
-  navigator.clipboard.writeText(text).then(() => {
-    // Lưu lại HTML gốc
-    const originalHtml = btnElement.innerHTML;
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      // Lưu lại HTML gốc
+      const originalHtml = btnElement.innerHTML;
 
-    // Đổi giao diện nút thành Đã Copy
-    btnElement.innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i> Đã Copy';
-    btnElement.classList.add('border-emerald-200', 'text-emerald-600', 'bg-emerald-50');
+      // Đổi giao diện nút thành Đã Copy
+      btnElement.innerHTML =
+        '<i class="fa-solid fa-check text-emerald-500"></i> Đã Copy';
+      btnElement.classList.add(
+        "border-emerald-200",
+        "text-emerald-600",
+        "bg-emerald-50",
+      );
 
-    // Trả lại giao diện ban đầu sau 1.5 giây
-    setTimeout(() => {
-      btnElement.innerHTML = originalHtml;
-      btnElement.classList.remove('border-emerald-200', 'text-emerald-600', 'bg-emerald-50');
-    }, 1500);
-  }).catch(err => {
-    console.error('Lỗi khi copy: ', err);
-    Swal.fire({
-      toast: true, position: 'top-end', icon: 'error',
-      title: 'Trình duyệt chặn Copy!', showConfirmButton: false, timer: 1500
+      // Trả lại giao diện ban đầu sau 1.5 giây
+      setTimeout(() => {
+        btnElement.innerHTML = originalHtml;
+        btnElement.classList.remove(
+          "border-emerald-200",
+          "text-emerald-600",
+          "bg-emerald-50",
+        );
+      }, 1500);
+    })
+    .catch((err) => {
+      console.error("Lỗi khi copy: ", err);
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: "Trình duyệt chặn Copy!",
+        showConfirmButton: false,
+        timer: 1500,
+      });
     });
-  });
 }
-
 
 // ==========================================
 // XỬ LÝ KHỐI NÚT NỔI (ASSISTIVE TOUCH)
@@ -1140,7 +1166,7 @@ async function loadAdditionalInfo() {
     if (data && data.length > 0) {
       let html = "";
 
-      data.forEach(item => {
+      data.forEach((item) => {
         html += `
           <div class="p-3 border border-slate-200 rounded-xl bg-white hover:border-viettel/30 transition-colors shadow-sm">
               <div class="flex justify-between items-start gap-2 mb-2">
@@ -1150,7 +1176,7 @@ async function loadAdditionalInfo() {
                   </button>
               </div>
               <div class="text-[12px] font-semibold text-slate-700 break-all bg-slate-50 px-2.5 py-2 border border-slate-100 rounded text-center tracking-wide">${item.thong_tin}</div>
-              ${item.ghi_chu ? `<div class="text-[10px] text-slate-400 mt-2 italic flex gap-1.5 leading-snug"><i class="fa-solid fa-circle-info mt-0.5"></i> <span>${item.ghi_chu}</span></div>` : ''}
+              ${item.ghi_chu ? `<div class="text-[10px] text-slate-400 mt-2 italic flex gap-1.5 leading-snug"><i class="fa-solid fa-circle-info mt-0.5"></i> <span>${item.ghi_chu}</span></div>` : ""}
           </div>
         `;
       });
@@ -1160,7 +1186,8 @@ async function loadAdditionalInfo() {
     }
   } catch (error) {
     console.error("Lỗi tải thông tin thêm:", error);
-    document.getElementById("floating-info-container").innerHTML = `<div class="text-center text-red-500 text-[11px] py-6">Lỗi kết nối.</div>`;
+    document.getElementById("floating-info-container").innerHTML =
+      `<div class="text-center text-red-500 text-[11px] py-6">Lỗi kết nối.</div>`;
   }
 }
 
@@ -1181,96 +1208,125 @@ function copyToClipboard(text, btnElement) {
   navigator.clipboard.writeText(text).then(() => {
     const originalHtml = btnElement.innerHTML;
 
-    btnElement.innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i> Copy xong';
-    btnElement.classList.add('border-emerald-200', 'text-emerald-600', 'bg-emerald-50');
+    btnElement.innerHTML =
+      '<i class="fa-solid fa-check text-emerald-500"></i> Copy xong';
+    btnElement.classList.add(
+      "border-emerald-200",
+      "text-emerald-600",
+      "bg-emerald-50",
+    );
 
     setTimeout(() => {
       btnElement.innerHTML = originalHtml;
-      btnElement.classList.remove('border-emerald-200', 'text-emerald-600', 'bg-emerald-50');
+      btnElement.classList.remove(
+        "border-emerald-200",
+        "text-emerald-600",
+        "bg-emerald-50",
+      );
     }, 1500);
   });
 }
 
-
 // ==========================================
 // TỰ ĐỘNG ĐÓNG BẢNG THÔNG TIN KHI CLICK RA NGOÀI
 // ==========================================
-document.addEventListener('click', function (event) {
+document.addEventListener("click", function (event) {
   const panel = document.getElementById("floating-info-panel");
 
   // Tìm khối div tổng bao quanh cả nút bấm tròn và bảng thông tin
-  const floatingContainer = panel ? panel.closest('.fixed') : null;
+  const floatingContainer = panel ? panel.closest(".fixed") : null;
 
   // Kiểm tra: Nếu bảng đang MỞ (không bị ẩn) VÀ vị trí click chuột KHÔNG nằm trong khối div đó
-  if (panel && !panel.classList.contains("hidden") && floatingContainer && !floatingContainer.contains(event.target)) {
+  if (
+    panel &&
+    !panel.classList.contains("hidden") &&
+    floatingContainer &&
+    !floatingContainer.contains(event.target)
+  ) {
     // Thu lại bảng
     panel.classList.add("hidden");
     panel.classList.remove("animate-fade-in-up");
   }
 });
 
-
-
 // ==========================================
 // ĐIỀU HƯỚNG TABS (SIDEBAR)
 // ==========================================
 function switchView(viewName) {
-  const views = ['add-order', 'history', 'report'];
+  const views = ["add-order", "history", "report"];
 
-  views.forEach(v => {
-    const el = document.getElementById('view-' + v);
-    const nav = document.getElementById('nav-' + v);
+  // Xử lý ẩn/hiện nút nổi (chỉ hiện ở tab add-order)
+  const floatingBtnWrapper = document.getElementById("floating-button-wrapper");
+  if (floatingBtnWrapper) {
+    if (viewName === "add-order") {
+      floatingBtnWrapper.classList.remove("hidden");
+      floatingBtnWrapper.classList.add("flex");
+    } else {
+      floatingBtnWrapper.classList.add("hidden");
+      floatingBtnWrapper.classList.remove("flex");
+    }
+  }
+
+  views.forEach((v) => {
+    const el = document.getElementById("view-" + v);
+    const nav = document.getElementById("nav-" + v);
 
     if (v === viewName) {
-      el.classList.remove('hidden');
-      el.classList.add(v === 'add-order' ? 'block' : 'flex');
-      nav.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors bg-red-50 text-viettel";
+      el.classList.remove("hidden");
+      el.classList.add(v === "add-order" ? "block" : "flex");
+      nav.className =
+        "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors bg-red-50 text-viettel";
 
       // Tự động set ngày hôm nay cho tab report nếu chưa có
-      if (v === 'report') {
-        const dateInput = document.getElementById('report-date');
+      if (v === "report") {
+        const dateInput = document.getElementById("report-date");
         if (!dateInput.value) {
           dateInput.valueAsDate = new Date();
           loadDailyReport(); // Tự động load báo cáo ngày hiện tại
         }
       }
     } else {
-      el.classList.add('hidden');
-      el.classList.remove('flex', 'block');
-      nav.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-800";
+      el.classList.add("hidden");
+      el.classList.remove("flex", "block");
+      nav.className =
+        "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-800";
     }
   });
 }
-
-
 
 // ==========================================
 // XỬ LÝ BÁO CÁO GIAO DỊCH
 // ==========================================
 async function loadDailyReport() {
-  const dateInput = document.getElementById('report-date').value;
-  if (!dateInput) return Swal.fire({ icon: 'warning', title: 'Vui lòng chọn ngày!' });
+  const dateInput = document.getElementById("report-date").value;
+  if (!dateInput)
+    return Swal.fire({ icon: "warning", title: "Vui lòng chọn ngày!" });
 
-  const [year, month, day] = dateInput.split('-');
+  const [year, month, day] = dateInput.split("-");
   const formattedDate = `${day}/${month}/${year}`;
 
-  const tbody = document.getElementById('report-table');
+  const tbody = document.getElementById("report-table");
 
-  tbody.innerHTML = '<tr><td colspan="10" class="p-16 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i><br>Đang tổng hợp dữ liệu...</td></tr>';
+  tbody.innerHTML =
+    '<tr><td colspan="10" class="p-16 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i><br>Đang tổng hợp dữ liệu...</td></tr>';
 
   try {
-    const reportData = await callGoogleAPI("getDailyReport", { dateStr: formattedDate });
+    const reportData = await callGoogleAPI("getDailyReport", {
+      dateStr: formattedDate,
+    });
     renderDailyReport(reportData, formattedDate);
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="10" class="p-16 text-center text-red-500">Lỗi tải báo cáo.</td></tr>';
+    tbody.innerHTML =
+      '<tr><td colspan="10" class="p-16 text-center text-red-500">Lỗi tải báo cáo.</td></tr>';
   }
 }
 
 function renderDailyReport(data, dateStr) {
-  const tbody = document.getElementById('report-table');
+  const tbody = document.getElementById("report-table");
 
   if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr class="empty-msg"><td colspan="10" class="p-16 text-center text-slate-400">Không có giao dịch nào trong ngày này.</td></tr>';
+    tbody.innerHTML =
+      '<tr class="empty-msg"><td colspan="10" class="p-16 text-center text-slate-400">Không có giao dịch nào trong ngày này.</td></tr>';
     return;
   }
 
@@ -1278,13 +1334,13 @@ function renderDailyReport(data, dateStr) {
   let ordersGroup = {};
   let orderKeys = [];
 
-  data.forEach(item => {
+  data.forEach((item) => {
     let k = item.orderId || "legacy_" + Math.random().toString();
     if (!ordersGroup[k]) {
       ordersGroup[k] = [];
       orderKeys.push(k);
     }
-    ordersGroup[k].unshift(item);
+    ordersGroup[k].push(item);
   });
 
   // Render HTML Bảng Dữ Liệu
@@ -1292,22 +1348,43 @@ function renderDailyReport(data, dateStr) {
   let stt = 1;
 
   // Đảo ngược để hiển thị đơn mới nhất lên trên
-  // Đảo ngược để hiển thị đơn mới nhất lên trên
-  orderKeys.reverse().forEach(k => {
+  orderKeys.forEach((k) => {
     let orderArray = ordersGroup[k];
     let rowSpan = orderArray.length;
 
     // Tìm hình thức thanh toán của đơn
-    let actualMethod = orderArray.find(item => item.method && item.method.trim() !== "")?.method || "";
-    let methodStyle = actualMethod === "CHUYỂN KHOẢN" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600";
+    let actualMethod =
+      orderArray.find((item) => item.method && item.method.trim() !== "")
+        ?.method || "";
+    let methodStyle =
+      actualMethod === "CHUYỂN KHOẢN"
+        ? "bg-emerald-100 text-emerald-700"
+        : "bg-slate-100 text-slate-600";
 
     // --- TÍNH TỔNG GIÁ THU CỦA CẢ ĐƠN HÀNG ---
-    let totalGiaThu = orderArray.reduce((sum, item) => sum + (Number(item.gia_thu) || 0), 0);
+    let totalGiaThu = orderArray.reduce(
+      (sum, item) => sum + (Number(item.gia_thu) || 0),
+      0,
+    );
 
     orderArray.forEach((sv, idx) => {
-      let networkColor = sv.network === "VINAPHONE" ? "text-blue-600" : (sv.network === "MOBIFONE" ? "text-blue-800" : (sv.network === "VIETNAMOBILE" ? "text-orange-500" : "text-red-500"));
+      let networkColor =
+        sv.network === "VINAPHONE"
+          ? "text-blue-600"
+          : sv.network === "MOBIFONE"
+            ? "text-blue-800"
+            : sv.network === "VIETNAMOBILE"
+              ? "text-orange-500"
+              : "text-red-500";
+      // 1. Kiểm tra xem đây có phải là dòng cuối cùng của đơn hàng này không
+      let isLastService = idx === rowSpan - 1;
 
-      html += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">`;
+      // 2. Nếu là dòng cuối cùng thì dùng border dày hơn (border-b-2) và màu đậm hơn (border-slate-400 hoặc border-slate-500)
+      let borderClass = isLastService
+        ? "border-b-2 border-slate-300"
+        : "border-b border-slate-50";
+
+      html += `<tr class="${borderClass} hover:bg-slate-50 transition-colors">`;
 
       // Các cột thông tin chung của Đơn hàng
       if (idx === 0) {
@@ -1322,7 +1399,7 @@ function renderDailyReport(data, dateStr) {
       }
 
       // Cột Dịch vụ
-      html += `<td class="p-3 border-r border-slate-100 text-[11px] font-bold uppercase text-slate-700 align-top">${sv.service}</td>`;
+      html += `<td class="p-3 border-r border-slate-100 text-[11px] font-bold uppercase text-slate-700 align-middle">${sv.service}</td>`;
 
       // --- CỘT GIÁ THU ĐÃ ĐƯỢC GỘP (Chỉ in ở dòng đầu tiên của đơn) ---
       if (idx === 0) {
@@ -1330,25 +1407,28 @@ function renderDailyReport(data, dateStr) {
       }
 
       // Cột Lợi nhuận
-      html += `<td class="p-3 border-r border-slate-100 text-right font-bold text-emerald-600 align-top">${sv.profit ? Number(sv.profit).toLocaleString("vi-VN") : "-"}</td>`;
+      html += `<td class="p-3 border-r border-slate-100 text-right font-bold text-emerald-600 align-middle">${sv.profit ? Number(sv.profit).toLocaleString("vi-VN") : "-"}</td>`;
 
       // Xử lý ghép chuỗi Ghi chú chi tiết
       let detailHtml = "";
       const extraFields = {
         "Tên gói/Sim": sv.ten_goi, // Đổi nhãn một chút cho phù hợp cả 2 dịch vụ
-        "Seri SIM": sv.seri_sim,   // Thêm hiển thị Seri SIM
+        "Seri SIM": sv.seri_sim, // Thêm hiển thị Seri SIM
         "Giá gói": sv.gia_goi,
         "Số tiền nạp": sv.so_tien_nap,
         "Thực trả": sv.thuc_tra,
         "Tên sim": sv.ten_sim_mang,
         "Giá sim": sv.gia_tien_sim,
-        "Mã G.Thiệu": sv.ma_gioi_thieu
+        "Mã G.Thiệu": sv.ma_gioi_thieu,
       };
 
       for (let label in extraFields) {
         let val = extraFields[label];
         if (val !== undefined && val !== null && val !== "") {
-          if (["Giá gói", "Số tiền nạp", "Thực trả", "Giá sim"].includes(label) && !isNaN(val)) {
+          if (
+            ["Giá gói", "Số tiền nạp", "Thực trả", "Giá sim"].includes(label) &&
+            !isNaN(val)
+          ) {
             val = Number(val).toLocaleString("vi-VN");
           }
           detailHtml += `<div class="leading-relaxed mb-0.5"><span class="font-semibold text-slate-600">${label}:</span> <span class="text-slate-800">${val}</span></div>`;
@@ -1356,11 +1436,12 @@ function renderDailyReport(data, dateStr) {
       }
 
       if (sv.ghi_chu && sv.ghi_chu !== "") {
-        let borderTop = detailHtml !== "" ? "mt-1 pt-1 border-t border-slate-100" : "";
+        let borderTop =
+          detailHtml !== "" ? "mt-1 pt-1 border-t border-slate-100" : "";
         detailHtml += `<div class="${borderTop} italic text-slate-500 leading-relaxed"><span class="font-semibold text-slate-600">Ghi chú:</span> ${sv.ghi_chu}</div>`;
       }
 
-      html += `<td class="p-3 border-r border-slate-100 text-[11px] align-top">${detailHtml}</td>`;
+      html += `<td class="p-3 border-r border-slate-100 text-[11px] align-middle">${detailHtml}</td>`;
 
       // Cột Hình thức thanh toán
       if (idx === 0) {

@@ -1,324 +1,577 @@
 <!doctype html>
 <html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hệ Thống Quản Lý Giao Dịch</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hệ Thống Quản Lý Giao Dịch</title>
+    <link rel="icon" type="image/jpeg" href="./favicon.png" />
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
 
-  <script>
-    if (localStorage.getItem("currentUser")) {
-      document.documentElement.classList.add("is-logged-in");
-    }
-  </script>
-  <style>
-    html.is-logged-in body {
-      background-color: #f1f5f9 !important;
-    }
+    <script>
+      if (localStorage.getItem("currentUser")) {
+        document.documentElement.classList.add("is-logged-in");
+      }
+    </script>
+    <style>
+      html.is-logged-in body {
+        background-color: #f1f5f9 !important;
+      }
 
-    html.is-logged-in #login-screen {
-      display: none !important;
-    }
+      html.is-logged-in #login-screen {
+        display: none !important;
+      }
 
-    html.is-logged-in #main-app {
-      display: flex !important;
-    }
-  </style>
-</head>
+      html.is-logged-in #main-app {
+        display: flex !important;
+      }
+    </style>
+  </head>
 
-<body class="flex items-center justify-center min-h-screen">
-  <div id="login-screen"
-    class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row mx-4">
+  <body class="flex items-center justify-center min-h-screen">
     <div
-      class="md:w-1/2 bg-viettel text-white p-10 flex flex-col justify-center items-center text-center relative overflow-hidden">
-      <h2 class="text-3xl font-bold mb-2 z-10 tracking-tight">
-        Hệ Thống<br />Quản Lý
-      </h2>
-      <p class="text-sm text-red-100 mb-8 z-10">
-        Nền tảng quản lý giao dịch viễn thông nội bộ.
-      </p>
-      <div class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-5 shadow-lg z-10 w-full max-w-xs">
-        <div class="h-20 flex items-center justify-center text-white">
-          <i class="fa-solid fa-network-wired text-5xl"></i>
-        </div>
-        <div class="mt-4 text-white font-bold text-lg tracking-wide">
-          Viettel Workspace
-        </div>
-      </div>
-      <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-red-700 rounded-full opacity-50 blur-3xl"></div>
-      <div class="absolute -top-20 -right-20 w-64 h-64 bg-red-500 rounded-full opacity-50 blur-3xl"></div>
-    </div>
-
-    <div class="md:w-1/2 p-10 flex flex-col justify-center bg-white">
-      <h3 class="text-2xl font-bold text-slate-800 mb-1">
-        Đăng Nhập Ca Làm Việc
-      </h3>
-      <p class="text-sm text-slate-500 mb-8">
-        Sử dụng mã nhân viên được cấp để truy cập hệ thống.
-      </p>
-      <div class="space-y-5">
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Mã Nhân Viên</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <i class="fa-regular fa-id-badge text-slate-400"></i>
-            </div>
-            <input type="text" id="staff-id"
-              class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg input-focus outline-none transition bg-slate-50"
-              placeholder="VD: TÀI" />
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Mật khẩu</label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-              <i class="fa-solid fa-lock text-slate-400"></i>
-            </div>
-            <input type="password" id="password"
-              class="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg input-focus outline-none transition bg-slate-50"
-              placeholder="••••••••" />
-          </div>
-        </div>
-        <button id="btn-login" onclick="doLogin()"
-          class="w-full bg-viettel text-white font-bold py-3.5 rounded-lg hover:bg-red-700 transition duration-200 flex justify-center items-center gap-2 mt-6 shadow-md hover:shadow-lg">
-          Truy Cập Hệ Thống <i class="fa-solid fa-arrow-right ml-1"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div id="main-app" class="w-full h-screen hidden flex">
-    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 h-full">
-      <div class="p-6 border-b border-slate-100 flex items-center justify-center bg-slate-50">
-        <h2 class="text-xl font-bold text-viettel flex items-center gap-2">
-          <i class="fa-solid fa-network-wired"></i> Workspace
+      id="login-screen"
+      class="w-full max-w-4xl bg-white rounded-[24px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden flex flex-col md:flex-row mx-4 transition-all"
+    >
+      <div
+        class="md:w-1/2 bg-viettel text-white p-10 md:p-12 flex flex-col justify-center items-center text-center relative overflow-hidden"
+      >
+        <h2
+          class="text-2xl md:text-3xl font-extrabold mb-3 z-10 tracking-tight uppercase whitespace-nowrap"
+        >
+          HỆ THỐNG QUẢN LÝ
         </h2>
-      </div>
+        <p class="text-sm md:text-base text-red-100 mb-10 z-10 font-medium">
+          Nền tảng quản lý giao dịch viễn thông nội bộ.
+        </p>
 
-      <div class="p-4 border-b border-slate-100">
-        <div class="text-[11px] font-medium text-slate-500 flex items-center gap-2 mb-1">
-          <span class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_4px_#22c55e]"></span>
-          Đang trực ca:
-        </div>
-        <div id="welcome-msg" class="font-bold text-slate-800 text-lg uppercase pl-4"></div>
-      </div>
-
-      <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-        <button onclick="switchView('add-order')" id="nav-add-order"
-          class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors bg-red-50 text-viettel">
-          <i class="fa-solid fa-plus-circle text-lg w-5"></i> Thêm giao dịch
-        </button>
-        <button onclick="switchView('history')" id="nav-history"
-          class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-800">
-          <i class="fa-solid fa-clock-rotate-left text-lg w-5"></i> Lịch sử giao dịch
-        </button>
-        <button onclick="switchView('report')" id="nav-report"
-          class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-800">
-          <i class="fa-solid fa-chart-pie text-lg w-5"></i> Báo cáo giao dịch
-        </button>
-      </nav>
-
-      <div class="p-4 border-t border-slate-100 bg-slate-50">
-        <button onclick="logOut()"
-          class="w-full flex justify-center items-center gap-2 bg-white border border-slate-200 hover:bg-red-50 hover:border-red-200 text-slate-600 hover:text-red-600 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm">
-          <i class="fa-solid fa-power-off"></i> ĐĂNG XUẤT
-        </button>
-      </div>
-    </aside>
-
-    <main class="flex-1 bg-slate-100 h-full overflow-y-auto p-6 md:p-8">
-
-      <div id="view-add-order" class="max-w-3xl mx-auto space-y-4 animate-fade-in-up">
-        <div class="flex justify-between items-center mb-2">
-          <h1 class="text-xl font-bold text-slate-800 uppercase flex items-center gap-2">
-            <i class="fa-solid fa-briefcase text-viettel"></i> THÊM GIAO DỊCH MỚI
-          </h1>
-        </div>
-
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">Số ĐT Khách <span
-                  class="text-red-500">*</span></label>
-              <input type="tel" id="phone"
-                class="w-full pl-3 pr-2 py-2 border border-slate-300 rounded-md text-sm outline-none input-focus font-bold text-slate-900 tracking-widest bg-slate-50"
-                placeholder="0987..." maxlength="10" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide">Nhà mạng <span
-                  class="text-red-500">*</span></label>
-              <select id="network" onchange="unlockServices()"
-                class="w-full py-2 px-3 border border-slate-300 rounded-md text-sm outline-none input-focus bg-slate-50 font-bold text-slate-700 appearance-none cursor-pointer">
-                <option value="" class="font-normal text-slate-400">-- Chọn --</option>
-                <option value="VIETTEL">VIETTEL</option>
-                <option value="VINAPHONE">VINAPHONE</option>
-                <option value="MOBIFONE">MOBIFONE</option>
-                <option value="VIETNAMOBILE">VIETNAMOBILE</option>
-              </select>
-            </div>
+        <div
+          class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 shadow-xl z-10 w-full max-w-xs transition-transform hover:scale-105 duration-300"
+        >
+          <div
+            class="w-24 h-24 bg-white rounded-full overflow-hidden flex items-center justify-center mx-auto shadow-[0_4px_15px_rgba(0,0,0,0.1)] border-4 border-white p-1"
+          >
+            <img
+              src="./logo.jpeg"
+              alt="Logo"
+              class="w-full h-full object-contain"
+            />
+          </div>
+          <div
+            class="mt-6 text-white font-black text-[15px] tracking-widest uppercase"
+          >
+            Cửa Hàng Viễn Thông 47 KIM QUAN THƯỢNG
           </div>
         </div>
 
-        <div id="service-section" class="hidden flex-col gap-3 pb-4">
-          <div id="services-wrapper" class="space-y-3"></div>
+        <div
+          class="absolute -bottom-20 -left-20 w-72 h-72 bg-red-700 rounded-full opacity-60 blur-3xl"
+        ></div>
+        <div
+          class="absolute -top-20 -right-20 w-72 h-72 bg-red-500 rounded-full opacity-60 blur-3xl"
+        ></div>
+      </div>
 
-          <div class="flex justify-center mt-2">
-            <button type="button" onclick="addServiceBlock()"
-              class="w-10 h-10 rounded-full border-2 border-red-200 bg-red-50 text-viettel hover:bg-viettel hover:text-white flex items-center justify-center transition-all shadow-sm"
-              title="Thêm dịch vụ khác cho số này">
-              <i class="fa-solid fa-plus text-base"></i>
-            </button>
-          </div>
+      <div class="md:w-1/2 p-10 md:p-14 flex flex-col justify-center bg-white">
+        <h3
+          class="text-xl md:text-2xl font-extrabold text-slate-800 mb-2 tracking-tight text-center uppercase whitespace-nowrap"
+        >
+          ĐĂNG NHẬP HỆ THỐNG
+        </h3>
+        <p class="text-sm text-slate-500 mb-8 font-medium text-center">
+          Sử dụng mã nhân viên được cấp để truy cập ca làm việc.
+        </p>
 
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-2 border-t-4 border-t-viettel">
-            <div class="grid grid-cols-2 gap-4 mb-4">
-              <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-center">
-                <div class="text-[10px] font-bold text-slate-500 uppercase mb-1">Tổng Thu Khách</div>
-                <div class="font-bold text-slate-800 text-lg" id="total-thu-display">0 <span
-                    class="text-[10px] font-normal text-slate-400">VND</span></div>
+        <div class="space-y-6">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2"
+              >Mã Nhân Viên</label
+            >
+            <div class="relative group">
+              <div
+                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-viettel text-slate-400"
+              >
+                <i class="fa-regular fa-id-badge text-lg"></i>
               </div>
-              <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 text-center">
-                <div class="text-[10px] font-bold text-emerald-600 uppercase mb-1">Tổng Lợi Nhuận</div>
-                <div class="font-bold text-emerald-700 text-lg" id="total-profit-display">0 <span
-                    class="text-[10px] font-normal text-emerald-500">VND</span></div>
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Hình thức thanh toán
-                <span class="text-red-500">*</span></label>
-              <select id="method"
-                class="w-full py-2 px-3 border border-slate-300 rounded-md text-sm outline-none input-focus bg-slate-50 font-bold text-slate-700 appearance-none cursor-pointer">
-                <option value="" class="font-normal text-slate-400">-- Chọn hình thức --</option>
-                <option value="TIỀN MẶT">TIỀN MẶT</option>
-                <option value="CHUYỂN KHOẢN">CHUYỂN KHOẢN</option>
-                <option value="-">-</option>
-              </select>
-            </div>
-
-            <div class="flex gap-3">
-              <button id="btn-submit" onclick="sendDataToSheets()"
-                class="flex-1 bg-viettel hover:bg-red-700 text-white font-bold py-3 rounded-lg transition duration-200 shadow-md flex justify-center items-center gap-2 text-sm">
-                <i class="fa-solid fa-check-double text-lg"></i> HOÀN TẤT ĐƠN
-              </button>
-              <button id="btn-cancel-edit" onclick="cancelEditMode()"
-                class="hidden bg-slate-400 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow text-sm uppercase"
-                title="Hủy chế độ sửa">
-                Hủy Sửa
-              </button>
+              <input
+                type="text"
+                id="staff-id"
+                class="w-full pl-12 pr-4 py-3.5 border border-slate-300 rounded-xl input-focus outline-none transition-all bg-slate-50 font-bold text-slate-800"
+                placeholder="VD: TAILV"
+              />
             </div>
           </div>
-        </div>
-      </div>
 
-      <div id="view-history" class="max-w-[1400px] mx-auto hidden h-full flex-col animate-fade-in-up">
-        <div class="flex justify-between items-center mb-4">
-          <h1 class="text-xl font-bold text-slate-800 uppercase flex items-center gap-2">
-            <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> LỊCH SỬ GIAO DỊCH
-          </h1>
-          <button onclick="loadHistoryFromServer(CURRENT_STAFF)"
-            class="bg-white border border-slate-200 text-slate-600 hover:text-viettel hover:border-red-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex gap-2 items-center">
-            <i class="fa-solid fa-rotate-right"></i> Làm mới
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2"
+              >Mật khẩu</label
+            >
+            <div class="relative group">
+              <div
+                class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-viettel text-slate-400"
+              >
+                <i class="fa-solid fa-lock text-lg"></i>
+              </div>
+              <input
+                type="password"
+                id="password"
+                class="w-full pl-12 pr-4 py-3.5 border border-slate-300 rounded-xl input-focus outline-none transition-all bg-slate-50 font-bold text-slate-800"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <button
+            id="btn-login"
+            onclick="doLogin()"
+            class="w-full bg-viettel text-white font-bold text-base py-4 rounded-xl hover:bg-red-700 transition-all duration-200 flex justify-center items-center gap-2 mt-8 shadow-[0_8px_20px_rgba(238,0,51,0.3)] hover:shadow-[0_12px_25px_rgba(238,0,51,0.4)] hover:-translate-y-0.5"
+          >
+            Truy Cập Hệ Thống <i class="fa-solid fa-arrow-right ml-1"></i>
           </button>
         </div>
-
-        <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-          <div class="flex-1 overflow-auto table-container p-0">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
-                <tr class="text-xs text-slate-500 uppercase tracking-wider font-bold">
-                  <th class="p-4 border-b border-slate-200 w-28">Thời Gian</th>
-                  <th class="p-4 border-b border-slate-200 w-36">Thuê Bao</th>
-                  <th class="p-4 border-b border-slate-200">Dịch Vụ</th>
-                  <th class="p-4 border-b border-slate-200 text-right">Giá Thu</th>
-                  <th class="p-4 border-b border-slate-200 text-right">Lợi nhuận TT</th>
-                  <th class="p-4 border-b border-slate-200 text-center w-28">H.Thức</th>
-                  <th class="p-4 border-b border-slate-200 text-center w-24">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody id="history-table" class="text-slate-700 bg-white">
-                <tr class="empty-msg">
-                  <td colspan="7" class="p-16 text-center text-slate-400 border-b-0">Đang khởi tạo...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div id="view-report" class="max-w-[1400px] mx-auto hidden h-full flex-col animate-fade-in-up">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-          <h1 class="text-xl font-bold text-slate-800 uppercase flex items-center gap-2">
-            <i class="fa-solid fa-chart-pie text-viettel"></i> BÁO CÁO CỬA HÀNG
-          </h1>
-          <div class="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm">
-            <input type="date" id="report-date"
-              class="px-3 py-1.5 border-none outline-none text-sm font-bold text-slate-700 bg-transparent cursor-pointer" />
-            <button onclick="loadDailyReport()"
-              class="bg-viettel hover:bg-red-700 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-sm transition-all flex gap-2 items-center">
-              <i class="fa-solid fa-filter"></i> Lọc dữ liệu
-            </button>
-          </div>
-        </div>
-
-        <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-          <div class="flex-1 overflow-auto table-container p-0">
-            <table class="w-full text-left border-collapse text-[13px]">
-              <thead class="bg-slate-50 sticky top-0 shadow-sm z-10 border-b border-slate-200">
-                <tr class="text-[11px] text-slate-600 uppercase tracking-wider font-bold">
-                  <th class="p-3 text-center border-r border-slate-200 w-10">STT</th>
-                  <th class="p-3 border-r border-slate-200 w-24">THỜI GIAN</th>
-                  <th class="p-3 border-r border-slate-200 w-16">MÃ NV</th>
-                  <th class="p-3 border-r border-slate-200 w-24">SĐT</th>
-                  <th class="p-3 border-r border-slate-200 w-24">NHÀ MẠNG</th>
-                  <th class="p-3 border-r border-slate-200 w-48">DỊCH VỤ SD</th>
-                  <th class="p-3 text-center border-r border-slate-200 w-24">GIÁ THU KHÁCH</th>
-                  <th class="p-3 text-center border-r border-slate-200 w-24">LỢI NHUẬN TT</th>
-                  <th class="p-3 border-r border-slate-200">CHI TIẾT GIAO DỊCH</th>
-                  <th class="p-3 text-center w-24">HÌNH THỨC</th>
-                </tr>
-              </thead>
-              <tbody id="report-table" class="text-slate-700 bg-white align-top">
-                <tr class="empty-msg">
-                  <td colspan="10" class="p-16 text-center text-slate-400 border-b-0">Chưa có dữ liệu báo cáo</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-    </main>
-  </div>
-
-  <script src="script.js"></script>
-  <div class="fixed bottom-8 left-8 z-[100] flex flex-col-reverse items-start gap-4">
-    <button onclick="toggleExtraInfo()"
-      class="w-14 h-14 bg-slate-800/90 backdrop-blur text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:bg-viettel transition-all flex items-center justify-center text-xl border-2 border-white/20 focus:outline-none group">
-      <i class="fa-solid fa-paste group-hover:scale-110 transition-transform"></i>
-    </button>
-
-    <div id="floating-info-panel"
-      class="hidden w-[340px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden origin-bottom-left transition-all">
-      <div class="p-3.5 bg-slate-800 text-white flex justify-between items-center">
-        <h3 class="font-bold text-[12px] uppercase tracking-wider flex items-center gap-2">
-          <i class="fa-solid fa-clipboard-list text-red-400"></i> KHO LƯU TRỮ MÃ
-        </h3>
-        <button onclick="toggleExtraInfo()"
-          class="text-slate-400 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/20">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-      <div id="floating-info-container" class="p-3 space-y-3 overflow-y-auto max-h-[450px] table-container bg-slate-50">
-        <div class="text-center text-[11px] text-slate-400 py-6"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang
-          tải dữ liệu...</div>
       </div>
     </div>
-  </div>
-</body>
 
+    <div id="main-app" class="w-full h-screen hidden flex flex-col">
+      <header class="w-full h-20 md:h-28 shrink-0 relative shadow-md z-20">
+        <img
+          src="./anhbia.jpeg"
+          alt="Ảnh bìa Viettel"
+          class="w-full h-full object-cover object-center"
+        />
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent flex flex-col justify-end px-6 pb-4 md:px-8 md:pb-5"
+        >
+          <h2
+            class="text-white text-lg md:text-2xl font-bold tracking-wide mb-0.5"
+          >
+            HỆ THỐNG QUẢN LÝ GIAO DỊCH
+          </h2>
+          <p
+            class="text-slate-300 text-xs md:text-sm font-medium flex items-center gap-1.5"
+          >
+            <i class="fa-solid fa-location-dot text-viettel"></i> Khối Cửa Hàng
+            Viễn Thông
+          </p>
+        </div>
+      </header>
+
+      <div class="flex-1 flex overflow-hidden">
+        <aside
+          class="w-64 md:w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 h-full z-10"
+        >
+          <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+            <div
+              class="text-[12px] font-medium text-slate-500 flex items-center gap-2 mb-1"
+            >
+              <span
+                class="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_4px_#22c55e]"
+              ></span>
+              Đang trực ca:
+            </div>
+            <div
+              id="welcome-msg"
+              class="font-bold text-slate-800 text-xl uppercase pl-4"
+            ></div>
+          </div>
+
+          <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button
+              onclick="switchView('add-order')"
+              id="nav-add-order"
+              class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors bg-red-50 text-viettel"
+            >
+              <i class="fa-solid fa-plus-circle text-lg w-5"></i> Thêm giao dịch
+            </button>
+            <button
+              onclick="switchView('history')"
+              id="nav-history"
+              class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+            >
+              <i class="fa-solid fa-clock-rotate-left text-lg w-5"></i> Lịch sử
+              giao dịch
+            </button>
+            <button
+              onclick="switchView('report')"
+              id="nav-report"
+              class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+            >
+              <i class="fa-solid fa-chart-pie text-lg w-5"></i> Báo cáo giao
+              dịch
+            </button>
+          </nav>
+
+          <div class="p-4 border-t border-slate-100 bg-slate-50">
+            <button
+              onclick="logOut()"
+              class="w-full flex justify-center items-center gap-2 bg-white border border-slate-200 hover:bg-red-50 hover:border-red-200 text-slate-600 hover:text-red-600 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-sm"
+            >
+              <i class="fa-solid fa-power-off"></i> ĐĂNG XUẤT
+            </button>
+          </div>
+        </aside>
+
+        <main class="flex-1 bg-slate-100 h-full overflow-y-auto p-6 md:p-8">
+          <div
+            id="view-add-order"
+            class="max-w-3xl mx-auto space-y-4 animate-fade-in-up"
+          >
+            <div class="flex justify-between items-center mb-2">
+              <h1
+                class="text-xl font-bold text-slate-800 uppercase flex items-center gap-2"
+              >
+                <i class="fa-solid fa-briefcase text-viettel"></i> THÊM GIAO
+                DỊCH MỚI
+              </h1>
+            </div>
+
+            <div
+              class="bg-white rounded-xl shadow-sm border border-slate-200 p-4"
+            >
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide"
+                    >Số ĐT Khách <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="tel"
+                    id="phone"
+                    class="w-full pl-3 pr-2 py-2 border border-slate-300 rounded-md text-sm outline-none input-focus font-bold text-slate-900 tracking-widest bg-slate-50"
+                    placeholder="0987..."
+                    maxlength="10"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wide"
+                    >Nhà mạng <span class="text-red-500">*</span></label
+                  >
+                  <select
+                    id="network"
+                    onchange="unlockServices()"
+                    class="w-full py-2 px-3 border border-slate-300 rounded-md text-sm outline-none input-focus bg-slate-50 font-bold text-slate-700 appearance-none cursor-pointer"
+                  >
+                    <option value="" class="font-normal text-slate-400">
+                      -- Chọn --
+                    </option>
+                    <option value="VIETTEL">VIETTEL</option>
+                    <option value="VINAPHONE">VINAPHONE</option>
+                    <option value="MOBIFONE">MOBIFONE</option>
+                    <option value="VIETNAMOBILE">VIETNAMOBILE</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div id="service-section" class="hidden flex-col gap-3 pb-4">
+              <div id="services-wrapper" class="space-y-3"></div>
+
+              <div class="flex justify-center mt-2">
+                <button
+                  type="button"
+                  onclick="addServiceBlock()"
+                  class="w-10 h-10 rounded-full border-2 border-red-200 bg-red-50 text-viettel hover:bg-viettel hover:text-white flex items-center justify-center transition-all shadow-sm"
+                  title="Thêm dịch vụ khác cho số này"
+                >
+                  <i class="fa-solid fa-plus text-base"></i>
+                </button>
+              </div>
+
+              <div
+                class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-2 border-t-4 border-t-viettel"
+              >
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                  <div
+                    class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-center"
+                  >
+                    <div
+                      class="text-[10px] font-bold text-slate-500 uppercase mb-1"
+                    >
+                      Tổng Thu Khách
+                    </div>
+                    <div
+                      class="font-bold text-slate-800 text-lg"
+                      id="total-thu-display"
+                    >
+                      0
+                      <span class="text-[10px] font-normal text-slate-400"
+                        >VND</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 text-center"
+                  >
+                    <div
+                      class="text-[10px] font-bold text-emerald-600 uppercase mb-1"
+                    >
+                      Tổng Lợi Nhuận
+                    </div>
+                    <div
+                      class="font-bold text-emerald-700 text-lg"
+                      id="total-profit-display"
+                    >
+                      0
+                      <span class="text-[10px] font-normal text-emerald-500"
+                        >VND</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label
+                    class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide"
+                    >Hình thức thanh toán
+                    <span class="text-red-500">*</span></label
+                  >
+                  <select
+                    id="method"
+                    class="w-full py-2 px-3 border border-slate-300 rounded-md text-sm outline-none input-focus bg-slate-50 font-bold text-slate-700 appearance-none cursor-pointer"
+                  >
+                    <option value="" class="font-normal text-slate-400">
+                      -- Chọn hình thức --
+                    </option>
+                    <option value="TIỀN MẶT">TIỀN MẶT</option>
+                    <option value="CHUYỂN KHOẢN">CHUYỂN KHOẢN</option>
+                    <option value="-">-</option>
+                  </select>
+                </div>
+
+                <div class="flex gap-3">
+                  <button
+                    id="btn-submit"
+                    onclick="sendDataToSheets()"
+                    class="flex-1 bg-viettel hover:bg-red-700 text-white font-bold py-3 rounded-lg transition duration-200 shadow-md flex justify-center items-center gap-2 text-sm"
+                  >
+                    <i class="fa-solid fa-check-double text-lg"></i> HOÀN TẤT
+                    ĐƠN
+                  </button>
+                  <button
+                    id="btn-cancel-edit"
+                    onclick="cancelEditMode()"
+                    class="hidden bg-slate-400 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow text-sm uppercase"
+                    title="Hủy chế độ sửa"
+                  >
+                    Hủy Sửa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            id="view-history"
+            class="max-w-[1400px] mx-auto hidden h-full flex-col animate-fade-in-up"
+          >
+            <div class="flex justify-between items-center mb-4">
+              <h1
+                class="text-xl font-bold text-slate-800 uppercase flex items-center gap-2"
+              >
+                <i class="fa-solid fa-clock-rotate-left text-slate-500"></i>
+                LỊCH SỬ GIAO DỊCH
+              </h1>
+              <button
+                onclick="loadHistoryFromServer(CURRENT_STAFF)"
+                class="bg-white border border-slate-200 text-slate-600 hover:text-viettel hover:border-red-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all flex gap-2 items-center"
+              >
+                <i class="fa-solid fa-rotate-right"></i> Làm mới
+              </button>
+            </div>
+
+            <div
+              class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden"
+            >
+              <div class="flex-1 overflow-auto table-container p-0">
+                <table class="w-full text-left border-collapse text-sm">
+                  <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
+                    <tr
+                      class="text-xs text-slate-500 uppercase tracking-wider font-bold"
+                    >
+                      <th class="p-4 border-b border-slate-200 w-28">
+                        Thời Gian
+                      </th>
+                      <th class="p-4 border-b border-slate-200 w-36">
+                        Thuê Bao
+                      </th>
+                      <th class="p-4 border-b border-slate-200">Dịch Vụ</th>
+                      <th class="p-4 border-b border-slate-200 text-right">
+                        Giá Thu
+                      </th>
+                      <th class="p-4 border-b border-slate-200 text-right">
+                        Lợi nhuận TT
+                      </th>
+                      <th
+                        class="p-4 border-b border-slate-200 text-center w-28"
+                      >
+                        H.Thức
+                      </th>
+                      <th
+                        class="p-4 border-b border-slate-200 text-center w-24"
+                      >
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="history-table" class="text-slate-700 bg-white">
+                    <tr class="empty-msg">
+                      <td
+                        colspan="7"
+                        class="p-16 text-center text-slate-400 border-b-0"
+                      >
+                        Đang khởi tạo...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div
+            id="view-report"
+            class="max-w-[1400px] mx-auto hidden h-full flex-col animate-fade-in-up"
+          >
+            <div
+              class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3"
+            >
+              <h1
+                class="text-xl font-bold text-slate-800 uppercase flex items-center gap-2"
+              >
+                <i class="fa-solid fa-chart-pie text-viettel"></i> BÁO CÁO CỬA
+                HÀNG
+              </h1>
+              <div
+                class="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm"
+              >
+                <input
+                  type="date"
+                  id="report-date"
+                  class="px-3 py-1.5 border-none outline-none text-sm font-bold text-slate-700 bg-transparent cursor-pointer"
+                />
+                <button
+                  onclick="loadDailyReport()"
+                  class="bg-viettel hover:bg-red-700 text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-sm transition-all flex gap-2 items-center"
+                >
+                  <i class="fa-solid fa-filter"></i> Lọc dữ liệu
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col overflow-hidden"
+            >
+              <div class="flex-1 overflow-auto table-container p-0">
+                <table class="w-full text-left border-collapse text-[13px]">
+                  <thead
+                    class="bg-slate-50 sticky top-0 shadow-sm z-10 border-b border-slate-200"
+                  >
+                    <tr
+                      class="text-[11px] text-slate-600 uppercase tracking-wider font-bold"
+                    >
+                      <th
+                        class="p-3 text-center border-r border-slate-200 w-10"
+                      >
+                        STT
+                      </th>
+                      <th class="p-3 border-r border-slate-200 w-24">
+                        THỜI GIAN
+                      </th>
+                      <th class="p-3 border-r border-slate-200 w-16">MÃ NV</th>
+                      <th class="p-3 border-r border-slate-200 w-24">SĐT</th>
+                      <th class="p-3 border-r border-slate-200 w-24">
+                        NHÀ MẠNG
+                      </th>
+                      <th class="p-3 border-r border-slate-200 w-48">
+                        DỊCH VỤ SD
+                      </th>
+                      <th
+                        class="p-3 text-center border-r border-slate-200 w-24"
+                      >
+                        GIÁ THU KHÁCH
+                      </th>
+                      <th
+                        class="p-3 text-center border-r border-slate-200 w-24"
+                      >
+                        LỢI NHUẬN TT
+                      </th>
+                      <th class="p-3 border-r border-slate-200">
+                        CHI TIẾT GIAO DỊCH
+                      </th>
+                      <th class="p-3 text-center w-24">HÌNH THỨC</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="report-table"
+                    class="text-slate-700 bg-white align-middle"
+                  >
+                    <tr class="empty-msg">
+                      <td
+                        colspan="10"
+                        class="p-16 text-center text-slate-400 border-b-0"
+                      >
+                        Chưa có dữ liệu báo cáo
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+    <div
+      id="floating-button-wrapper"
+      class="fixed bottom-8 right-8 z-[100] flex flex-col-reverse items-end gap-4"
+    >
+      <button
+        onclick="toggleExtraInfo()"
+        class="w-14 h-14 bg-slate-800/90 backdrop-blur text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:bg-viettel transition-all flex items-center justify-center text-xl border-2 border-white/20 focus:outline-none group"
+      >
+        <i
+          class="fa-solid fa-paste group-hover:scale-110 transition-transform"
+        ></i>
+      </button>
+
+      <div
+        id="floating-info-panel"
+        class="hidden w-[340px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden origin-bottom-right transition-all"
+      >
+        <div
+          class="p-3.5 bg-slate-800 text-white flex justify-between items-center"
+        >
+          <h3
+            class="font-bold text-[12px] uppercase tracking-wider flex items-center gap-2"
+          >
+            <i class="fa-solid fa-clipboard-list text-red-400"></i> KHO LƯU TRỮ
+            MÃ
+          </h3>
+          <button
+            onclick="toggleExtraInfo()"
+            class="text-slate-400 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/20"
+          >
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+        <div
+          id="floating-info-container"
+          class="p-3 space-y-3 overflow-y-auto max-h-[450px] table-container bg-slate-50"
+        >
+          <div class="text-center text-[11px] text-slate-400 py-6">
+            <i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang tải dữ liệu...
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
