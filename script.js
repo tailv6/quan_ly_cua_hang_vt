@@ -62,7 +62,7 @@ const CONFIG_SERVICES = {
       label: "Mã giới thiệu",
       type: "text",
       placeholder: "Nhập mã...",
-      required: false,
+      required: true,
     },
     {
       sheetCol: "ghi_chu",
@@ -101,6 +101,9 @@ const CONFIG_SERVICES = {
 
 let CURRENT_STAFF = "";
 let blockCounter = 0;
+let IS_EDIT_MODE = false;
+let EDIT_ORDER_ID = "";
+let HISTORY_CACHE = {}; // Lưu trữ dữ liệu tạm thời phục vụ cho việc sửa đơn
 
 // Hàm gọi API
 async function callGoogleAPI(action, payload) {
@@ -236,6 +239,7 @@ function showMainApp(staffId) {
   document.getElementById("main-app").style.display = "block";
   initForm();
   loadHistoryFromServer(staffId);
+  loadAdditionalInfo();
 }
 
 // Reset form
@@ -246,6 +250,17 @@ function initForm() {
   blockCounter = 0;
   calculateTotalOrder();
   unlockServices(); // Sẽ tự ẩn khung dịch vụ
+
+  // Reset trạng thái sửa về mặc định
+  IS_EDIT_MODE = false;
+  EDIT_ORDER_ID = "";
+  const submitBtn = document.getElementById("btn-submit");
+  if (submitBtn) {
+    submitBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> HOÀN TẤT ĐƠN';
+    submitBtn.className = "flex-1 bg-viettel hover:bg-red-700 text-white font-bold py-2.5 rounded-md transition duration-200 shadow flex justify-center items-center gap-2 text-sm";
+  }
+  const cancelBtn = document.getElementById("btn-cancel-edit");
+  if (cancelBtn) cancelBtn.classList.add("hidden");
 }
 
 // Ẩn/Hiện phần dịch vụ dựa vào việc chọn mạng
@@ -593,26 +608,71 @@ async function sendDataToSheets() {
     dataToUpload.push(packageData);
   });
 
-  let completed = 0;
-  for (let dataObj of dataToUpload) {
+  // --- PHÂN NHÁNH LOGIC: NẾU ĐANG Ở CHẾ ĐỘ SỬA ĐƠN ---
+  if (IS_EDIT_MODE) {
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> ĐANG CẬP NHẬT...';
+
+    // Ghi đè mã đơn hàng thành mã của đơn cũ đang sửa
+    dataToUpload.forEach(item => {
+      item.orderId = EDIT_ORDER_ID;
+    });
+
     try {
-      await callGoogleAPI("addData", { dataObj: dataObj });
-      completed++;
-      if (completed === dataToUpload.length) {
-        addOrderToTable(dataToUpload, orderId, false);
-        finishSubmit(submitBtn, originalText);
-      }
+      // Gửi toàn bộ mảng dữ liệu đã sửa lên Sheets
+      await callGoogleAPI("updateOrderInSheet", { orderId: EDIT_ORDER_ID, dataArray: dataToUpload });
+
+      // Tải lại bảng lịch sử để hiển thị dữ liệu mới nhất
+      await loadHistoryFromServer(CURRENT_STAFF);
+
+      submitBtn.disabled = false;
+      submitBtn.classList.remove("opacity-70", "cursor-not-allowed");
+      submitBtn.innerHTML = originalText;
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Cập nhật đơn thành công!",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      initForm(); // Khôi phục form về trạng thái ban đầu
     } catch (error) {
       Swal.fire({
         icon: "error",
-        title: "Lỗi ghi nhận",
+        title: "Lỗi cập nhật",
         text: error.message,
         confirmButtonColor: "#ee0033",
       });
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalText;
       submitBtn.classList.remove("opacity-70", "cursor-not-allowed");
-      break;
+    }
+  }
+  // --- PHÂN NHÁNH LOGIC: NẾU LÀ TẠO ĐƠN MỚI BÌNH THƯỜNG ---
+  else {
+    let completed = 0;
+    for (let dataObj of dataToUpload) {
+      try {
+        await callGoogleAPI("addData", { dataObj: dataObj });
+        completed++;
+        if (completed === dataToUpload.length) {
+          HISTORY_CACHE[orderId] = dataToUpload; // CẬP NHẬT CACHE NGAY KHI THÊM MỚI ĐƠN, ĐỂ DỮ LIỆU LUÔN NHẤT QUÁN KHI SỬA ĐƠN
+          addOrderToTable(dataToUpload, orderId, false);
+          finishSubmit(submitBtn, originalText);
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Lỗi ghi nhận",
+          text: error.message,
+          confirmButtonColor: "#ee0033",
+        });
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        submitBtn.classList.remove("opacity-70", "cursor-not-allowed");
+        break;
+      }
     }
   }
 }
@@ -665,6 +725,9 @@ function renderHistoryData(data) {
     }
     groups[k].unshift(item);
   });
+
+  HISTORY_CACHE = groups; // <-- THÊM DÒNG NÀY: Gán dữ liệu vào cache để dùng khi sửa đơn
+
   orderKeys.reverse().forEach((k) => {
     addOrderToTable(groups[k], k, true);
   });
@@ -719,29 +782,30 @@ function addOrderToTable(orderArray, orderId, isFromServer = false) {
       : `order-row-${orderId} hover:bg-slate-50 transition-colors`;
     const actionBtnHtml = isDeleted
       ? `<i class="fa-solid fa-ban text-slate-400"></i>`
-      : `<button onclick="handleDeleteOrder('${orderId}')" class="text-slate-400 transition-colors bg-slate-50 w-8 h-8 rounded flex items-center justify-center mx-auto hover:text-red-500 hover:bg-red-50" title="Hủy đơn"><i class="fa-solid fa-trash-can text-sm"></i></button>`;
+      : `<div class="flex items-center justify-center gap-1.5 mx-auto">
+          <button onclick="handleEditOrder('${orderId}')" class="text-slate-400 transition-colors bg-slate-50 w-8 h-8 rounded flex items-center justify-center hover:text-blue-500 hover:bg-blue-50" title="Sửa đơn"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+          <button onclick="handleDeleteOrder('${orderId}')" class="text-slate-400 transition-colors bg-slate-50 w-8 h-8 rounded flex items-center justify-center hover:text-red-500 hover:bg-red-50" title="Hủy đơn"><i class="fa-solid fa-trash-can text-sm"></i></button>
+         </div>`;
 
     html += `<tr class="${trClasses}">
-        ${
-          index === 0
-            ? `<td class="p-4 text-xs align-top bg-white border-b border-b-slate-200" rowspan="${rowSpan}">${timeDisplay}</td>
+        ${index === 0
+        ? `<td class="p-4 text-xs align-top bg-white border-b border-b-slate-200" rowspan="${rowSpan}">${timeDisplay}</td>
         <td class="p-4 align-top bg-white border-b border-b-slate-200" rowspan="${rowSpan}">
           <div class="font-bold text-slate-900 text-[13px]">${data.phone}</div>
           <div class="text-[10px] ${networkColorClass} font-bold tracking-widest mt-0.5">${data.network}</div>
         </td>`
-            : ""
-        }
+        : ""
+      }
         <td class="p-4 bg-white border-b border-b-slate-100"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${serviceStyle}">${data.service}</span></td>
         <td class="p-4 text-right font-bold text-slate-800 bg-white border-b border-b-slate-100">${data.gia_thu ? Number(data.gia_thu).toLocaleString("vi-VN") : "-"}</td>
         <td class="p-4 text-right font-bold text-emerald-600 bg-white border-b border-b-slate-100">${data.profit ? Number(data.profit).toLocaleString("vi-VN") : "-"}</td>
-        ${
-          index === 0
-            ? `<td class="py-2 px-4 text-center align-middle bg-white border-b border-b-slate-200" rowspan="${rowSpan}">
+        ${index === 0
+        ? `<td class="py-2 px-4 text-center align-middle bg-white border-b border-b-slate-200" rowspan="${rowSpan}">
           ${data.method ? `<span class="px-2 py-1 rounded text-[10px] font-bold ${methodStyle}">${data.method}</span>` : "-"}
         </td>
         <td class="py-2 px-4 text-center align-middle bg-white border-b border-b-slate-200" rowspan="${rowSpan}">${actionBtnHtml}</td>`
-            : ""
-        }
+        : ""
+      }
     </tr>`;
   });
   tbody.insertAdjacentHTML("afterbegin", html);
@@ -750,7 +814,7 @@ function addOrderToTable(orderArray, orderId, isFromServer = false) {
 async function handleDeleteOrder(orderId) {
   const confirmDelete = await Swal.fire({
     title: "Xác nhận hủy?",
-    text: "Hủy TOÀN BỘ đơn hàng này trên Sheets?",
+    text: "Hủy TOÀN BỘ đơn hàng này?",
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#ee0033",
@@ -842,3 +906,256 @@ function initAutoLogout() {
   // Chỉ chạy ngầm kiểm tra mỗi 1 phút, KHÔNG bắt sự kiện click/phím nữa
   setInterval(checkSessionTimeout, 60000);
 }
+
+// Hàm kích hoạt chế độ sửa và đổ ngược dữ liệu lên Form
+function handleEditOrder(orderId) {
+  const orderArray = HISTORY_CACHE[orderId];
+  if (!orderArray || orderArray.length === 0) return;
+
+  // 1. Chuyển trạng thái hệ thống sang chế độ sửa
+  IS_EDIT_MODE = true;
+  EDIT_ORDER_ID = orderId;
+
+  // 2. Điền thông tin cơ bản thuê bao
+  document.getElementById("phone").value = orderArray[0].phone || "";
+  document.getElementById("network").value = orderArray[0].network || "";
+
+  // Hiển thị và mở khóa khu vực dịch vụ
+  const serviceSection = document.getElementById("service-section");
+  serviceSection.classList.remove("hidden");
+  serviceSection.classList.add("flex");
+
+  // Xóa trắng các block dịch vụ trống mặc định hiện tại trên form
+  const wrapper = document.getElementById("services-wrapper");
+  wrapper.innerHTML = "";
+  blockCounter = 0;
+
+  // 3. Đổ tuần tự từng khối dịch vụ thuộc đơn hàng này lên form
+  orderArray.forEach((data) => {
+    addServiceBlock(); // Tự động tạo 1 block mới, tăng blockCounter lên
+    const blockId = "service-block-" + blockCounter;
+    const block = document.getElementById(blockId);
+
+    // Chọn loại dịch vụ tương ứng
+    block.querySelector(".service-select").value = data.service;
+    renderFields(blockId); // Gọi hàm render các input động cho dịch vụ này
+
+    // Điền các trường dữ liệu động cấu hình sẵn
+    block.querySelectorAll(".dynamic-input").forEach((input) => {
+      const col = input.getAttribute("data-col");
+      if (data[col] !== undefined && data[col] !== "") {
+        let val = data[col];
+        if (input.hasAttribute("oninput") && input.getAttribute("oninput").includes("formatCurrencyInput")) {
+          input.value = Number(val).toLocaleString("vi-VN");
+        } else {
+          input.value = val;
+        }
+      }
+    });
+
+    // Điền giá thu khách
+    const giaThuInput = block.querySelector(".block-gia-thu");
+    if (data.gia_thu) {
+      giaThuInput.value = Number(data.gia_thu).toLocaleString("vi-VN");
+    }
+
+    // Tính toán lại lợi nhuận của riêng khối này
+    calculateBlockProfit(blockId);
+  });
+
+  // Điền hình thức thanh toán
+  if (orderArray[0].method) {
+    document.getElementById("method").value = orderArray[0].method;
+  }
+
+  // 4. Thay đổi giao diện nút Hoàn tất -> Cập nhật
+  const submitBtn = document.getElementById("btn-submit");
+  submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> CẬP NHẬT ĐƠN';
+  submitBtn.className = "flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-md transition duration-200 shadow flex justify-center items-center gap-2 text-sm";
+
+  document.getElementById("btn-cancel-edit").classList.remove("hidden");
+
+  // Cuộn mượt màn hình lên trên cùng để nhân viên thao tác sửa đơn
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Hàm thoát chế độ sửa đơn
+function cancelEditMode() {
+  initForm();
+}
+
+
+
+// ==========================================
+// TỰ ĐỘNG FOCUS LẠI Ô NHẬP LIỆU KHI CHUYỂN TAB
+// ==========================================
+let lastFocusedElement = null;
+
+// Ghi nhớ ô input/select cuối cùng mà người dùng click vào
+document.addEventListener('focusin', function (e) {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+    lastFocusedElement = e.target;
+  }
+});
+
+// Khi người dùng quay trở lại cửa sổ/tab web này
+window.addEventListener('focus', function () {
+  // Kiểm tra xem phần tử đó có còn tồn tại trên giao diện không 
+  // (tránh lỗi nếu đó là ô input thuộc khối dịch vụ vừa bị người dùng ấn nút xóa)
+  if (lastFocusedElement && document.body.contains(lastFocusedElement)) {
+    // Độ trễ 50ms giúp trình duyệt xử lý xong giao diện trước khi ép con trỏ chuột hiện lên
+    setTimeout(() => {
+      lastFocusedElement.focus();
+    }, 50);
+  }
+});
+
+
+
+
+
+// ==========================================
+// XỬ LÝ KHỐI THÔNG TIN THÊM (MÃ CTV, LINK...)
+// ==========================================
+async function loadAdditionalInfo() {
+  try {
+    const infoContainer = document.getElementById("extra-info-container");
+    const section = document.getElementById("extra-info-section");
+
+    // Gọi API lấy dữ liệu từ Google Sheets
+    const data = await callGoogleAPI("getAdditionalInfo", {});
+
+    if (data && data.length > 0) {
+      section.classList.remove("hidden"); // Hiện khối thông tin lên
+      let html = "";
+
+      data.forEach(item => {
+        html += `
+          <div class="p-2 border border-slate-100 rounded bg-slate-50 hover:bg-slate-100 transition-colors">
+              <div class="flex justify-between items-start gap-2 mb-1.5">
+                  <div class="font-bold text-[11px] text-slate-800 uppercase">${item.ten_goi}</div>
+                  <button onclick="copyToClipboard('${item.thong_tin}', this)" class="text-slate-500 hover:text-viettel bg-white border border-slate-200 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 transition-all shadow-sm">
+                      <i class="fa-regular fa-copy"></i> Copy
+                  </button>
+              </div>
+              <div class="text-[11px] font-semibold text-slate-700 break-all bg-white px-2 py-1.5 border border-slate-200 rounded">${item.thong_tin}</div>
+              ${item.ghi_chu ? `<div class="text-[9px] text-slate-400 mt-1 italic"><i class="fa-solid fa-circle-info text-[8px]"></i> ${item.ghi_chu}</div>` : ''}
+          </div>
+        `;
+      });
+      infoContainer.innerHTML = html;
+    } else {
+      infoContainer.innerHTML = `<div class="text-center text-[10px] text-slate-400 py-4">Chưa có thông tin nào trên Sheet.</div>`;
+    }
+  } catch (error) {
+    console.error("Lỗi tải thông tin thêm:", error);
+    document.getElementById("extra-info-container").innerHTML = `<div class="text-center text-red-500 text-[10px] py-4">Lỗi kết nối khi tải Thông tin thêm.</div>`;
+  }
+}
+
+// Hàm xử lý copy text và đổi hiệu ứng nút
+function copyToClipboard(text, btnElement) {
+  navigator.clipboard.writeText(text).then(() => {
+    // Lưu lại HTML gốc
+    const originalHtml = btnElement.innerHTML;
+
+    // Đổi giao diện nút thành Đã Copy
+    btnElement.innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i> Đã Copy';
+    btnElement.classList.add('border-emerald-200', 'text-emerald-600', 'bg-emerald-50');
+
+    // Trả lại giao diện ban đầu sau 1.5 giây
+    setTimeout(() => {
+      btnElement.innerHTML = originalHtml;
+      btnElement.classList.remove('border-emerald-200', 'text-emerald-600', 'bg-emerald-50');
+    }, 1500);
+  }).catch(err => {
+    console.error('Lỗi khi copy: ', err);
+    Swal.fire({
+      toast: true, position: 'top-end', icon: 'error',
+      title: 'Trình duyệt chặn Copy!', showConfirmButton: false, timer: 1500
+    });
+  });
+}
+
+
+// ==========================================
+// XỬ LÝ KHỐI NÚT NỔI (ASSISTIVE TOUCH)
+// ==========================================
+async function loadAdditionalInfo() {
+  try {
+    const infoContainer = document.getElementById("floating-info-container");
+
+    // Gọi API lấy dữ liệu từ Google Sheets
+    const data = await callGoogleAPI("getAdditionalInfo", {});
+
+    if (data && data.length > 0) {
+      let html = "";
+
+      data.forEach(item => {
+        html += `
+          <div class="p-3 border border-slate-200 rounded-xl bg-white hover:border-viettel/30 transition-colors shadow-sm">
+              <div class="flex justify-between items-start gap-2 mb-2">
+                  <div class="font-bold text-[12px] text-slate-800 uppercase leading-tight mt-0.5">${item.ten_goi}</div>
+                  <button onclick="copyToClipboard('${item.thong_tin}', this)" class="text-slate-500 hover:text-viettel bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 px-2.5 py-1 rounded-md text-[10px] font-bold flex items-center gap-1.5 transition-all shadow-sm flex-shrink-0">
+                      <i class="fa-regular fa-copy"></i> Copy
+                  </button>
+              </div>
+              <div class="text-[12px] font-semibold text-slate-700 break-all bg-slate-50 px-2.5 py-2 border border-slate-100 rounded text-center tracking-wide">${item.thong_tin}</div>
+              ${item.ghi_chu ? `<div class="text-[10px] text-slate-400 mt-2 italic flex gap-1.5 leading-snug"><i class="fa-solid fa-circle-info mt-0.5"></i> <span>${item.ghi_chu}</span></div>` : ''}
+          </div>
+        `;
+      });
+      infoContainer.innerHTML = html;
+    } else {
+      infoContainer.innerHTML = `<div class="text-center text-[11px] text-slate-400 py-6">Chưa có thông tin nào trên Sheet.</div>`;
+    }
+  } catch (error) {
+    console.error("Lỗi tải thông tin thêm:", error);
+    document.getElementById("floating-info-container").innerHTML = `<div class="text-center text-red-500 text-[11px] py-6">Lỗi kết nối.</div>`;
+  }
+}
+
+// Hàm bật/tắt bảng thông tin
+function toggleExtraInfo() {
+  const panel = document.getElementById("floating-info-panel");
+  if (panel.classList.contains("hidden")) {
+    panel.classList.remove("hidden");
+    panel.classList.add("animate-fade-in-up");
+  } else {
+    panel.classList.add("hidden");
+    panel.classList.remove("animate-fade-in-up");
+  }
+}
+
+// Hàm xử lý copy text
+function copyToClipboard(text, btnElement) {
+  navigator.clipboard.writeText(text).then(() => {
+    const originalHtml = btnElement.innerHTML;
+
+    btnElement.innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i> Copy xong';
+    btnElement.classList.add('border-emerald-200', 'text-emerald-600', 'bg-emerald-50');
+
+    setTimeout(() => {
+      btnElement.innerHTML = originalHtml;
+      btnElement.classList.remove('border-emerald-200', 'text-emerald-600', 'bg-emerald-50');
+    }, 1500);
+  });
+}
+
+
+// ==========================================
+// TỰ ĐỘNG ĐÓNG BẢNG THÔNG TIN KHI CLICK RA NGOÀI
+// ==========================================
+document.addEventListener('click', function (event) {
+  const panel = document.getElementById("floating-info-panel");
+
+  // Tìm khối div tổng bao quanh cả nút bấm tròn và bảng thông tin
+  const floatingContainer = panel ? panel.closest('.fixed') : null;
+
+  // Kiểm tra: Nếu bảng đang MỞ (không bị ẩn) VÀ vị trí click chuột KHÔNG nằm trong khối div đó
+  if (panel && !panel.classList.contains("hidden") && floatingContainer && !floatingContainer.contains(event.target)) {
+    // Thu lại bảng
+    panel.classList.add("hidden");
+    panel.classList.remove("animate-fade-in-up");
+  }
+});
