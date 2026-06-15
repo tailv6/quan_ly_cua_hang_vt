@@ -1,6 +1,6 @@
 // CẤU HÌNH API KẾT NỐI VỚI GOOGLE SHEETS
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbyLGDnboy-_fFG1TxYl4tzgxO6QAIHhvSazFASL7NQvsC6pFeAluBSK26YE1LdrQONMhQ/exec";
+  "https://script.google.com/macros/s/AKfycbwu2F0wuog3UcdMPP0_q_bYryTA5c2WqWrK4HrX6LrTU1D_BDe3qYsDB_sgIb7KlP2s/exec";
 
 // Cấu hình các loại dịch vụ và trường dữ liệu tương ứng
 const CONFIG_SERVICES = {
@@ -85,6 +85,44 @@ const CONFIG_SERVICES = {
       label: "Mã giới thiệu",
       type: "text",
       placeholder: "Nhập mã...",
+      required: false,
+    },
+    {
+      sheetCol: "ghi_chu",
+      label: "Ghi chú",
+      type: "text",
+      placeholder: "Nhập ghi chú...",
+      required: false,
+    },
+  ],
+  "BÁN SIM MẠNG": [
+    {
+      sheetCol: "ten_goi",
+      label: "Tên sim",
+      type: "text",
+      placeholder: "Nhập tên sim...",
+      required: true,
+    },
+    {
+      sheetCol: "seri_sim",
+      label: "Seri SIM",
+      type: "text",
+      placeholder: "Nhập số seri...",
+      required: false,
+    },
+    {
+      sheetCol: "gia_tien_sim",
+      label: "Giá bán",
+      type: "text",
+      placeholder: "Nhập giá bán...",
+      isCurrency: true,
+      required: true,
+    },
+    {
+      sheetCol: "ghi_chu",
+      label: "Ghi chú",
+      type: "text",
+      placeholder: "Nhập ghi chú chi tiết...",
       required: false,
     },
   ],
@@ -246,6 +284,7 @@ function showMainApp(staffId) {
 function initForm() {
   document.getElementById("phone").value = "";
   document.getElementById("network").value = "";
+  document.getElementById("method").value = "";
   document.getElementById("services-wrapper").innerHTML = "";
   blockCounter = 0;
   calculateTotalOrder();
@@ -437,7 +476,8 @@ function calculateBlockProfit(blockId) {
   let giaThu = Number(giaThuInput.replace(/\D/g, "")) || 0;
   let profit = 0;
 
-  if (giaThu > 0) {
+  // Tính toán lợi nhuận ngay cả khi Giá thu là 0 (chỉ bỏ qua nếu ô bị để trống)
+  if (giaThuInput.trim() !== "") {
     if (serviceName === "CHUẨN HÓA, XÁC THỰC TTTB") {
       const maGioiThieuInput = block.querySelector(
         'input[data-col="ma_gioi_thieu"]',
@@ -506,6 +546,15 @@ async function sendDataToSheets() {
       confirmButtonColor: "#ee0033",
     });
 
+  const method = document.getElementById("method").value;
+  if (!method)
+    return Swal.fire({
+      icon: "warning",
+      title: "Thiếu thông tin",
+      text: "Vui lòng chọn Hình thức thanh toán!",
+      confirmButtonColor: "#ee0033",
+    });
+
   const blocks = document.querySelectorAll(".service-block");
   if (blocks.length === 0) return;
 
@@ -551,14 +600,12 @@ async function sendDataToSheets() {
 
     const giaThuInput = blocks[i].querySelector(".block-gia-thu");
     if (!giaThuInput.disabled) {
-      if (
-        getRawNumber(giaThuInput.value) === "" ||
-        Number(getRawNumber(giaThuInput.value)) === 0
-      ) {
+      // Chỉ báo lỗi nếu ô Giá thu bị bỏ trống hoàn toàn, cho phép nhập số 0
+      if (getRawNumber(giaThuInput.value) === "") {
         return Swal.fire({
           icon: "warning",
           title: "Thiếu thông tin",
-          text: `Nhập "Giá thu khách" cho dịch vụ ${i + 1}!`,
+          text: `Nhập "Giá thu khách" cho dịch vụ ${i + 1} (có thể nhập 0)!`,
           confirmButtonColor: "#ee0033",
         });
       }
@@ -586,6 +633,7 @@ async function sendDataToSheets() {
       so_tien_nap: "",
       gia_goi: "",
       gia_tien_sim: "",
+      seri_sim: "",
       thuc_tra: "",
       ghi_chu: "",
       gia_thu: getRawNumber(block.querySelector(".block-gia-thu").value),
@@ -911,6 +959,7 @@ function initAutoLogout() {
 function handleEditOrder(orderId) {
   const orderArray = HISTORY_CACHE[orderId];
   if (!orderArray || orderArray.length === 0) return;
+  switchView('add-order');
 
   // 1. Chuyển trạng thái hệ thống sang chế độ sửa
   IS_EDIT_MODE = true;
@@ -1159,3 +1208,170 @@ document.addEventListener('click', function (event) {
     panel.classList.remove("animate-fade-in-up");
   }
 });
+
+
+
+// ==========================================
+// ĐIỀU HƯỚNG TABS (SIDEBAR)
+// ==========================================
+function switchView(viewName) {
+  const views = ['add-order', 'history', 'report'];
+
+  views.forEach(v => {
+    const el = document.getElementById('view-' + v);
+    const nav = document.getElementById('nav-' + v);
+
+    if (v === viewName) {
+      el.classList.remove('hidden');
+      el.classList.add(v === 'add-order' ? 'block' : 'flex');
+      nav.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors bg-red-50 text-viettel";
+
+      // Tự động set ngày hôm nay cho tab report nếu chưa có
+      if (v === 'report') {
+        const dateInput = document.getElementById('report-date');
+        if (!dateInput.value) {
+          dateInput.valueAsDate = new Date();
+          loadDailyReport(); // Tự động load báo cáo ngày hiện tại
+        }
+      }
+    } else {
+      el.classList.add('hidden');
+      el.classList.remove('flex', 'block');
+      nav.className = "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-800";
+    }
+  });
+}
+
+
+
+// ==========================================
+// XỬ LÝ BÁO CÁO GIAO DỊCH
+// ==========================================
+async function loadDailyReport() {
+  const dateInput = document.getElementById('report-date').value;
+  if (!dateInput) return Swal.fire({ icon: 'warning', title: 'Vui lòng chọn ngày!' });
+
+  const [year, month, day] = dateInput.split('-');
+  const formattedDate = `${day}/${month}/${year}`;
+
+  const tbody = document.getElementById('report-table');
+
+  tbody.innerHTML = '<tr><td colspan="10" class="p-16 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i><br>Đang tổng hợp dữ liệu...</td></tr>';
+
+  try {
+    const reportData = await callGoogleAPI("getDailyReport", { dateStr: formattedDate });
+    renderDailyReport(reportData, formattedDate);
+  } catch (error) {
+    tbody.innerHTML = '<tr><td colspan="10" class="p-16 text-center text-red-500">Lỗi tải báo cáo.</td></tr>';
+  }
+}
+
+function renderDailyReport(data, dateStr) {
+  const tbody = document.getElementById('report-table');
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr class="empty-msg"><td colspan="10" class="p-16 text-center text-slate-400">Không có giao dịch nào trong ngày này.</td></tr>';
+    return;
+  }
+
+  // Group dữ liệu theo orderId
+  let ordersGroup = {};
+  let orderKeys = [];
+
+  data.forEach(item => {
+    let k = item.orderId || "legacy_" + Math.random().toString();
+    if (!ordersGroup[k]) {
+      ordersGroup[k] = [];
+      orderKeys.push(k);
+    }
+    ordersGroup[k].unshift(item);
+  });
+
+  // Render HTML Bảng Dữ Liệu
+  let html = "";
+  let stt = 1;
+
+  // Đảo ngược để hiển thị đơn mới nhất lên trên
+  // Đảo ngược để hiển thị đơn mới nhất lên trên
+  orderKeys.reverse().forEach(k => {
+    let orderArray = ordersGroup[k];
+    let rowSpan = orderArray.length;
+
+    // Tìm hình thức thanh toán của đơn
+    let actualMethod = orderArray.find(item => item.method && item.method.trim() !== "")?.method || "";
+    let methodStyle = actualMethod === "CHUYỂN KHOẢN" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600";
+
+    // --- TÍNH TỔNG GIÁ THU CỦA CẢ ĐƠN HÀNG ---
+    let totalGiaThu = orderArray.reduce((sum, item) => sum + (Number(item.gia_thu) || 0), 0);
+
+    orderArray.forEach((sv, idx) => {
+      let networkColor = sv.network === "VINAPHONE" ? "text-blue-600" : (sv.network === "MOBIFONE" ? "text-blue-800" : (sv.network === "VIETNAMOBILE" ? "text-orange-500" : "text-red-500"));
+
+      html += `<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">`;
+
+      // Các cột thông tin chung của Đơn hàng
+      if (idx === 0) {
+        html += `<td rowspan="${rowSpan}" class="p-3 text-center border-r border-slate-200 bg-white align-middle font-bold text-slate-500">${stt++}</td>`;
+        html += `<td rowspan="${rowSpan}" class="p-3 border-r border-slate-200 bg-white align-middle">
+                    <div class="font-bold text-slate-700">${sv.timeStr.split(" ")[0]}</div>
+                    <div class="text-[10px] text-slate-400"><i class="fa-regular fa-clock"></i> ${sv.timeStr.split(" ")[1] || ""}</div>
+                 </td>`;
+        html += `<td rowspan="${rowSpan}" class="p-3 border-r border-slate-200 bg-white align-middle font-bold text-blue-600 uppercase">${sv.staffId}</td>`;
+        html += `<td rowspan="${rowSpan}" class="p-3 border-r border-slate-200 bg-white align-middle font-bold text-slate-800">${sv.phone}</td>`;
+        html += `<td rowspan="${rowSpan}" class="p-3 border-r border-slate-200 bg-white align-middle text-[10px] font-bold ${networkColor} tracking-widest">${sv.network}</td>`;
+      }
+
+      // Cột Dịch vụ
+      html += `<td class="p-3 border-r border-slate-100 text-[11px] font-bold uppercase text-slate-700 align-top">${sv.service}</td>`;
+
+      // --- CỘT GIÁ THU ĐÃ ĐƯỢC GỘP (Chỉ in ở dòng đầu tiên của đơn) ---
+      if (idx === 0) {
+        html += `<td rowspan="${rowSpan}" class="p-3 border-r border-slate-200 bg-white text-right font-bold text-slate-800 align-middle text-[13px]">${totalGiaThu ? totalGiaThu.toLocaleString("vi-VN") : "-"}</td>`;
+      }
+
+      // Cột Lợi nhuận
+      html += `<td class="p-3 border-r border-slate-100 text-right font-bold text-emerald-600 align-top">${sv.profit ? Number(sv.profit).toLocaleString("vi-VN") : "-"}</td>`;
+
+      // Xử lý ghép chuỗi Ghi chú chi tiết
+      let detailHtml = "";
+      const extraFields = {
+        "Tên gói/Sim": sv.ten_goi, // Đổi nhãn một chút cho phù hợp cả 2 dịch vụ
+        "Seri SIM": sv.seri_sim,   // Thêm hiển thị Seri SIM
+        "Giá gói": sv.gia_goi,
+        "Số tiền nạp": sv.so_tien_nap,
+        "Thực trả": sv.thuc_tra,
+        "Tên sim": sv.ten_sim_mang,
+        "Giá sim": sv.gia_tien_sim,
+        "Mã G.Thiệu": sv.ma_gioi_thieu
+      };
+
+      for (let label in extraFields) {
+        let val = extraFields[label];
+        if (val !== undefined && val !== null && val !== "") {
+          if (["Giá gói", "Số tiền nạp", "Thực trả", "Giá sim"].includes(label) && !isNaN(val)) {
+            val = Number(val).toLocaleString("vi-VN");
+          }
+          detailHtml += `<div class="leading-relaxed mb-0.5"><span class="font-semibold text-slate-600">${label}:</span> <span class="text-slate-800">${val}</span></div>`;
+        }
+      }
+
+      if (sv.ghi_chu && sv.ghi_chu !== "") {
+        let borderTop = detailHtml !== "" ? "mt-1 pt-1 border-t border-slate-100" : "";
+        detailHtml += `<div class="${borderTop} italic text-slate-500 leading-relaxed"><span class="font-semibold text-slate-600">Ghi chú:</span> ${sv.ghi_chu}</div>`;
+      }
+
+      html += `<td class="p-3 border-r border-slate-100 text-[11px] align-top">${detailHtml}</td>`;
+
+      // Cột Hình thức thanh toán
+      if (idx === 0) {
+        html += `<td rowspan="${rowSpan}" class="p-3 bg-white align-middle text-center">
+                    ${actualMethod ? `<span class="inline-block whitespace-nowrap px-2 py-1 rounded text-[10px] font-bold ${methodStyle}">${actualMethod}</span>` : "-"}
+                 </td>`;
+      }
+
+      html += `</tr>`;
+    });
+  });
+
+  tbody.innerHTML = html;
+}
